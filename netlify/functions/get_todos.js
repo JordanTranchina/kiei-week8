@@ -1,9 +1,21 @@
 let firebase = require('./firebase')
 
-exports.handler = async function(event) {
+exports.handler = async function (event) {
   console.log('hello from the back-end!')
 
   let todosData = []
+
+  let db = firebase.firestore()
+  let querySnapshot = await db.collection("todos").get()
+  let todos = querySnapshot.docs
+  for (let i = 0; i < todos.length; i++) {
+    let todoId = todos[i].id
+    let todo = todos[i].data()
+    todosData.push({
+      id: todoId,
+      text: todo.text
+    })
+  }
 
   return {
     statusCode: 200,
