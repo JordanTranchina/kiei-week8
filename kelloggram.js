@@ -3,7 +3,7 @@ let db = firebase.firestore()
 // Change main event listener from DOMContentLoaded to 
 // firebase.auth().onAuthStateChanged and move code that 
 // shows login UI to only show when signed out
-firebase.auth().onAuthStateChanged(async function(user) {
+firebase.auth().onAuthStateChanged(async function (user) {
   if (user) {
     // Signed in
     console.log('signed in')
@@ -18,22 +18,22 @@ firebase.auth().onAuthStateChanged(async function(user) {
     document.querySelector('.sign-in-or-sign-out').innerHTML = `
       <button class="text-pink-500 underline sign-out">Sign Out</button>
     `
-    document.querySelector('.sign-out').addEventListener('click', function(event) {
+    document.querySelector('.sign-out').addEventListener('click', function (event) {
       console.log('sign out clicked')
       firebase.auth().signOut()
       document.location.href = 'kelloggram.html'
     })
 
     // Listen for the form submit and create/render the new post
-    document.querySelector('form').addEventListener('submit', async function(event) {
+    document.querySelector('form').addEventListener('submit', async function (event) {
       event.preventDefault()
       let postUsername = user.displayName
       let postImageUrl = document.querySelector('#image-url').value
       let postNumberOfLikes = 0
-      let docRef = await db.collection('posts').add({ 
+      let docRef = await db.collection('posts').add({
         userId: user.uid,
-        username: postUsername, 
-        imageUrl: postImageUrl, 
+        username: postUsername,
+        imageUrl: postImageUrl,
         created: firebase.firestore.FieldValue.serverTimestamp()
       })
       let postId = docRef.id // the newly created document's ID
@@ -42,11 +42,17 @@ firebase.auth().onAuthStateChanged(async function(user) {
     })
 
     // 🔥 LAB STARTS HERE 🔥
-    let querySnapshot = await db.collection('posts').orderBy('created').get()
-    let posts = querySnapshot.docs
-    for (let i=0; i<posts.length; i++) {
+    // replace with lambda function
+    // getting
+    // let querySnapshot = await db.collection('posts').orderBy('created').get()
+    // let posts = querySnapshot.docs
+    let response = await fetch(`/.netlify/functions/get_posts`)
+    let posts = await response.json()
+    console.log(posts);
+
+    for (let i = 0; i < posts.length; i++) {
       let postId = posts[i].id
-      let postData = posts[i].data()
+      let postData = posts[i]
       let postUsername = postData.username
       let postImageUrl = postData.imageUrl
       let querySnapshot = await db.collection('likes').where('postId', '==', postId).get()
@@ -95,7 +101,7 @@ async function renderPost(postId, postUsername, postImageUrl, postNumberOfLikes)
       </div>
     </div>
   `)
-  document.querySelector(`.post-${postId} .like-button`).addEventListener('click', async function(event) {
+  document.querySelector(`.post-${postId} .like-button`).addEventListener('click', async function (event) {
     event.preventDefault()
     console.log(`post ${postId} like button clicked!`)
     let currentUserId = firebase.auth().currentUser.uid
@@ -114,7 +120,7 @@ async function renderPost(postId, postUsername, postImageUrl, postNumberOfLikes)
       let newNumberOfLikes = parseInt(existingNumberOfLikes) + 1
       document.querySelector(`.post-${postId} .likes`).innerHTML = newNumberOfLikes
     }
-    
+
   })
 }
 
